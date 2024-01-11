@@ -1,0 +1,55 @@
+From 3a9026509f9c1745f378595e55e5024361ad152d Mon Sep 17 00:00:00 2001
+From: ph10 <ph10@2f5784b3-3f2a-0410-8824-cb99058d5e15>
+Date: Mon, 10 Feb 2020 17:17:34 +0000
+Subject: [PATCH] Check the size of the number after (?C as it is read, in
+ order to avoid integer overflow.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+git-svn-id: svn://vcs.exim.org/pcre/code/trunk@1761 2f5784b3-3f2a-0410-8824-cb99058d5e15
+Petr Písař: Ported to 8.43.
+---
+ pcre_compile.c | 14 ++++++++------
+
+diff --git a/pcre_compile.c b/pcre_compile.c
+index 079d30a..1e3d6c3 100644
+--- a/pcre_compile.c
++++ b/pcre_compile.c
+@@ -6,7 +6,7 @@
+ and semantics are as close as possible to those of the Perl 5 language.
+ 
+                        Written by Philip Hazel
+-           Copyright (c) 1997-2018 University of Cambridge
++           Copyright (c) 1997-2020 University of Cambridge
+ 
+ -----------------------------------------------------------------------------
+ Redistribution and use in source and binary forms, with or without
+@@ -7130,17 +7130,19 @@ for (;; ptr++)
+           int n = 0;
+           ptr++;
+           while(IS_DIGIT(*ptr))
++            { 
+             n = n * 10 + *ptr++ - CHAR_0;
++            if (n > 255)
++              {
++              *errorcodeptr = ERR38;
++              goto FAILED;
++              }
++            } 
+           if (*ptr != CHAR_RIGHT_PARENTHESIS)
+             {
+             *errorcodeptr = ERR39;
+             goto FAILED;
+             }
+-          if (n > 255)
+-            {
+-            *errorcodeptr = ERR38;
+-            goto FAILED;
+-            }
+           *code++ = n;
+           PUT(code, 0, (int)(ptr - cd->start_pattern + 1)); /* Pattern offset */
+           PUT(code, LINK_SIZE, 0);                          /* Default length */
+-- 
+2.21.1
+
