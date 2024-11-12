@@ -1,0 +1,39 @@
+From bc21e89823bb3b1550e03489345864dfe1515e2c Mon Sep 17 00:00:00 2001
+From: Lukas Javorsky <ljavorsk@redhat.com>
+Date: Tue, 16 Apr 2024 10:13:35 +0000
+Subject: [PATCH] Fix the possible array overrun when the OP_TABLE_LENGTH
+
+When the *code pointer holds value of 162 (OP_TABLE_LENGTH) it could
+possibly overrun the priv_OP_lengths[] array. By adding this condition
+it's not being overrun and the 0 values is added instead. It would most
+likely be 0 when overrun as the array is alligned to the lowest byte
+with zeros
+
+---
+ pcre_printint.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/pcre_printint.c b/pcre_printint.c
+index 60dcb55..e1e419b 100644
+--- a/pcre_printint.c
++++ b/pcre_printint.c
+@@ -825,8 +825,14 @@ for(;;)
+     fprintf(f, " %s %s", flag, priv_OP_names[*code]);
+     break;
+     }
+-
+-  code += priv_OP_lengths[*code] + extra;
++  if (*code >= OP_TABLE_LENGTH){
++    // Use 0 because it would most likely be 0 when the priv_OP_lengths is overrun.
++    // Allocator would have allign the size of this array
++    code += 0 + extra;
++  }
++  else {
++    code += priv_OP_lengths[*code] + extra;
++  }
+   fprintf(f, "\n");
+   }
+ }
+-- 
+2.44.0
+

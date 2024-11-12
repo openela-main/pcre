@@ -1,0 +1,44 @@
+From 3f53de7ff720b40f547a2d55532a73b2b570ab40 Mon Sep 17 00:00:00 2001
+From: Lukas Javorsky <ljavorsk@redhat.com>
+Date: Tue, 16 Apr 2024 10:28:58 +0000
+Subject: [PATCH] Fix UNINIT SAST report for the mark* values
+
+These values are initialized if the re* values is true, thus we can add
+it to the condition, so there is no possibility that the mark* values
+are not initialized
+---
+ pcre_jit_test.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/pcre_jit_test.c b/pcre_jit_test.c
+index 034cb52..e3e4a3e 100644
+--- a/pcre_jit_test.c
++++ b/pcre_jit_test.c
+@@ -1687,21 +1687,21 @@ static int regression_tests(void)
+ 
+ 		if (is_successful) {
+ #ifdef SUPPORT_PCRE8
+-			if (mark8_1 != mark8_2) {
++			if (re8 && (mark8_1 != mark8_2)) {
+ 				printf("8 bit: Mark value mismatch: [%d] '%s' @ '%s'\n",
+ 					total, current->pattern, current->input);
+ 				is_successful = 0;
+ 			}
+ #endif
+ #ifdef SUPPORT_PCRE16
+-			if (mark16_1 != mark16_2) {
++			if (re16 && (mark16_1 != mark16_2)) {
+ 				printf("16 bit: Mark value mismatch: [%d] '%s' @ '%s'\n",
+ 					total, current->pattern, current->input);
+ 				is_successful = 0;
+ 			}
+ #endif
+ #ifdef SUPPORT_PCRE32
+-			if (mark32_1 != mark32_2) {
++			if (re32 && (mark32_1 != mark32_2)) {
+ 				printf("32 bit: Mark value mismatch: [%d] '%s' @ '%s'\n",
+ 					total, current->pattern, current->input);
+ 				is_successful = 0;
+-- 
+2.44.0
+

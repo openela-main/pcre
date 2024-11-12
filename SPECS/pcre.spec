@@ -2,7 +2,7 @@
 #%%global rcversion RC1
 Name:       pcre
 Version:    8.44
-Release:    %{?rcversion:0.}3%{?rcversion:.%rcversion}%{?dist}.3
+Release:    %{?rcversion:0.}4%{?rcversion:.%rcversion}%{?dist}
 %global myversion %{version}%{?rcversion:-%rcversion}
 Summary:    Perl-compatible regular expression library
 ## Source package only:
@@ -49,6 +49,9 @@ Patch4:     pcre-8.44-Inicialize-name-table-memory-region.patch
 # <https://lists.exim.org/lurker/message/20201220.222016.d8cd6d61.en.html>
 Patch5:     pcre-8.44-JIT-compiler-update-for-Intel-CET.patch
 Patch6:     pcre-8.44-Pass-mshstk-to-the-compiler-when-Intel-CET-is-enable.patch
+# SAST reports RHEL-32488 and RHEL-32492 fixed
+Patch7:	    0001-Fix-the-possible-array-overrun-when-the-OP_TABLE_LEN.patch
+Patch8:	    0002-Fix-UNINIT-SAST-report-for-the-mark-values.patch
 BuildRequires:  readline-devel
 BuildRequires:  autoconf
 BuildRequires:  automake
@@ -139,6 +142,8 @@ Utilities demonstrating PCRE capabilities like pcregrep or pcretest.
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p1
+%patch8 -p1
 # Because of the multilib patch
 libtoolize --copy --force
 autoreconf -vif
@@ -231,6 +236,9 @@ make %{?_smp_mflags} check VERBOSE=yes
 %{_mandir}/man1/pcretest.*
 
 %changelog
+* Wed Apr 17 2024 Lukas Javorsky <ljavorsk@redhat.com> - 8.44.3-4
+- Fix the SAST reports described in RHEL-32492 and RHEL-32488
+
 * Mon Aug 09 2021 Mohan Boddu <mboddu@redhat.com> - 8.44-3.3
 - Rebuilt for IMA sigs, glibc 2.34, aarch64 flags
   Related: rhbz#1991688
